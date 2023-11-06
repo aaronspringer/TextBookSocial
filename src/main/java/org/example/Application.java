@@ -9,46 +9,51 @@ import org.slf4j.LoggerFactory;
 
 public class Application {
     private static final Logger log = LoggerFactory.getLogger(Application.class);
-
-
     public static void main(String[] args) {
         log.info("Starting TextBookSocial.java");
-        Connection conn = DatabaseConnector.connect();
         Console console = System.console();
 
-        if (conn != null && console != null) {
-            DatabaseInitializer.initializeDatabase();
+        if (console != null) {
+            try (Connection conn = DatabaseConnector.connect()) {
+                if (conn != null) {
+                    DatabaseInitializer.initializeDatabase();
 
-            try {
-                // first run makes an admin
-                createFirstAdmin(console);
-                User user = null;
-                while (true) {
-                    // gets current user after login/signup
-                    user = authenticate(console);
-                    // user gotta be logged in
-                    if (user != null) {
-                        displayMenu(user, console);
-                    } else {
-                        // User chose to log out
-                        console.printf("You have been logged out.\n");
-                        break;
+                    try {
+                        createFirstAdmin(console);
+                        User user = null;
+                        while (true) {
+                            user = authenticate(console);
+                            if (user != null) {
+                                displayMenu(user, console);
+                            } else {
+                                console.printf("You have been logged out.\n");
+                                break;
+                            }
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+
+                        try {
+                            conn.close();
+                        } catch (SQLException e) {
+                            console.printf("Error closing the database connection: %s\n", e.getMessage());
+                        }
                     }
                 }
-
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
-                // close connection to free resources
                 try {
-                    conn.close();
-                } catch (SQLException e) {
-                    console.printf("Error closing the database connection: %s\n", e.getMessage());
+                    FileEncryptor.encrypt(DatabaseConnector.getKey(), DatabaseConnector.getDecryptedDbFile(), DatabaseConnector.getEncryptedDbFile());
+                    log.info("Encryption successful!");
+                } catch (Exception e) {
+                    console.printf("Error encrypting the database file: %s\n", e.getMessage());
                 }
             }
         } else {
-            assert console != null;
-            console.printf("Failed to establish a database connection or console is not available.\n");
+            console.printf("Console is not available.\n");
         }
     }
 
