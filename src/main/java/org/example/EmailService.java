@@ -12,7 +12,7 @@ import java.util.Properties;
 public class EmailService {
 
     private final String username = "textbooksocials@gmail.com";
-    private final String password = "fhuyfjwfwhzvnlss";
+    private String password = System.getenv("EMAIL_KEY");
     private final Properties properties;
 
     public EmailService() {

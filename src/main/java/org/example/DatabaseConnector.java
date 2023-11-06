@@ -14,7 +14,7 @@ public class DatabaseConnector {
     private static final Logger log = LoggerFactory.getLogger(DatabaseConnector.class);
     private static final String ENCRYPTED_DB_FILE = "edb.sqlite";
     private static final String DECRYPTED_DB_FILE = "db.sqlite";
-    private static final String KEY = "totallygoodkeyss";
+    // Removed the hardcoded key
 
     public static Connection connect() {
         Connection conn = null;
@@ -31,7 +31,8 @@ public class DatabaseConnector {
     public static void decryptDatabase() {
         try {
             if (Files.exists(Paths.get(ENCRYPTED_DB_FILE))) {
-                FileDecryptor.decrypt(KEY, ENCRYPTED_DB_FILE, DECRYPTED_DB_FILE);
+                String key = getKey(); // Retrieve the key from the environment variable
+                FileDecryptor.decrypt(key, ENCRYPTED_DB_FILE, DECRYPTED_DB_FILE);
                 log.info("Decrypted " + ENCRYPTED_DB_FILE);
             }
         } catch (Exception e) {
@@ -41,20 +42,20 @@ public class DatabaseConnector {
 
     public static void encryptDatabaseFile(Console console, Logger log) {
         try {
-            FileEncryptor.encrypt(DatabaseConnector.getKey(), DatabaseConnector.getDecryptedDbFile(), DatabaseConnector.getEncryptedDbFile());
-            log.info("Encrypted " + DatabaseConnector.getEncryptedDbFile());
+            String key = getKey(); // Retrieve the key from the environment variable
+            FileEncryptor.encrypt(key, getDecryptedDbFile(), getEncryptedDbFile());
+            log.info("Encrypted " + getEncryptedDbFile());
 
-            File decryptedFile = new File(DatabaseConnector.getDecryptedDbFile());
+            File decryptedFile = new File(getDecryptedDbFile());
             if (decryptedFile.delete()) {
-                log.info("Deleted unencrypted file " + DatabaseConnector.getDecryptedDbFile());
+                log.info("Deleted unencrypted file " + getDecryptedDbFile());
             } else {
-                log.warn("Failed to delete decrypted file "+ DatabaseConnector.getDecryptedDbFile());
+                log.warn("Failed to delete decrypted file " + getDecryptedDbFile());
             }
         } catch (Exception e) {
             console.printf("Error encrypting the database file: %s\n", e.getMessage());
         }
     }
-
 
     public static String getEncryptedDbFile() {
         return ENCRYPTED_DB_FILE;
@@ -65,6 +66,7 @@ public class DatabaseConnector {
     }
 
     public static String getKey() {
-        return KEY;
+        return System.getenv("DB_ENCRYPTION_KEY"); // Retrieve the key from an environment variable
     }
 }
+

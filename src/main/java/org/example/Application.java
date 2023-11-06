@@ -133,11 +133,13 @@ public class Application {
                     displayMenu(user, console);
                     break;
                 case "L":
+                    log.info("User " + user.getId() + " logged out");
                     TextUtils.clearDisplay();
                     user = null;
                     return;
                 case "Q":
                     TextUtils.clearDisplay();
+                    log.info("Quit TextBook");
                     user = null;
                     console.printf("Goodbye!\n");
                     DatabaseConnector.encryptDatabaseFile(console, log);
