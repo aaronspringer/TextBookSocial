@@ -2,17 +2,22 @@ package org.example;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+
 import java.io.Console;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Application {
     private static final Logger log = LoggerFactory.getLogger(Application.class);
+
     public static void main(String[] args) {
+        LogDirectoryCreator.createLogDirectoryIfNotExists("logs");
         log.info("Starting TextBookSocial.java");
         Console console = System.console();
 
         if (console != null) {
+            log.info("Decrypting database");
             DatabaseConnector.decryptDatabase();
             try (Connection conn = DatabaseConnector.connect()) {
                 if (conn != null) {
@@ -78,8 +83,6 @@ public class Application {
     }
 
 
-
-
     private static void displayMenu(User user, Console console) {
         String option;
         do {
@@ -97,34 +100,44 @@ public class Application {
 
             switch (option) {
                 case "P":
+                    TextUtils.clearDisplay();
                     DatabaseUtils.fetchPosts();
                     break;
                 case "A":
+                    TextUtils.clearDisplay();
                     console.printf("What will this post say?: ");
                     DatabaseUtils.createPost(user.getUsername(), console.readLine());
                     break;
                 case "D":
+                    TextUtils.clearDisplay();
                     deletePost(user, console);
                     break;
                 case "C":
+                    TextUtils.clearDisplay();
                     commentOnPost(user, console);
                     break;
                 case "RC":
+                    TextUtils.clearDisplay();
                     readComments(console);
                     break;
                 case "DC":
+                    TextUtils.clearDisplay();
                     deleteComment(user, console);
                     break;
                 case "R":
+                    TextUtils.clearDisplay();
                     readPostandComments(console);
                     break;
                 case "M":
+                    TextUtils.clearDisplay();
                     displayMenu(user, console);
                     break;
                 case "L":
+                    TextUtils.clearDisplay();
                     user = null;
                     return;
                 case "Q":
+                    TextUtils.clearDisplay();
                     user = null;
                     console.printf("Goodbye!\n");
                     DatabaseConnector.encryptDatabaseFile(console, log);
@@ -233,26 +246,22 @@ public class Application {
                     }
                 }
             }
-
-
         }
         return user;
     }
-
 
     private static User signUp(Console console) {
         console.printf("Create a new account\n");
 
         console.printf("Enter username: ");
         String username = console.readLine();
-        if(DatabaseUtils.usernameExists(username)){
+        if (DatabaseUtils.usernameExists(username)) {
             console.printf("An account with this username already exists.\n");
             return null;
         }
 
         console.printf("Enter email: ");
         String email = console.readLine();
-
         if (DatabaseUtils.emailExists(email)) {
             console.printf("An account with this email already exists.\n");
             return null;
@@ -260,7 +269,6 @@ public class Application {
 
         String newPassword;
         newPassword = new String(console.readPassword("Enter password: "));
-
         while (!isValidPassword(newPassword)) {
             console.printf("Password must be at least 10 characters in length and contain at least one uppercase letter, one number, and one special character (!&$@#*).\n");
             newPassword = new String(console.readPassword("Enter password: "));
