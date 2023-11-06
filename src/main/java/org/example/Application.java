@@ -175,7 +175,7 @@ public class Application {
         User user = null;
         while (user == null) {
             console.printf("Welcome to TextBookSocial!\n");
-            console.printf("Do you want to (L)ogin or (S)ign up?\n");
+            console.printf("Do you want to (L)ogin, (S)ign up, or (Q)uit?\n");
             String choice = console.readLine().toUpperCase();
             switch (choice) {
                 case "L":
@@ -183,6 +183,11 @@ public class Application {
                     break;
                 case "S":
                     user = signUp(console);
+                    break;
+                case "Q":
+                    console.printf("Goodbye!\n");
+                    DatabaseConnector.encryptDatabaseFile(console, log);
+                    System.exit(0);
                     break;
                 default:
                     console.printf("Invalid choice. Please try again.\n");
@@ -240,6 +245,10 @@ public class Application {
 
         console.printf("Enter username: ");
         String username = console.readLine();
+        if(DatabaseUtils.usernameExists(username)){
+            console.printf("An account with this username already exists.\n");
+            return null;
+        }
 
         console.printf("Enter email: ");
         String email = console.readLine();
@@ -249,16 +258,15 @@ public class Application {
             return null;
         }
 
-        char[] passwordArray = console.readPassword("Enter password: ");
-        String password = new String(passwordArray);
+        String newPassword;
+        newPassword = new String(console.readPassword("Enter password: "));
 
-        while (!isValidPassword(password)) {
+        while (!isValidPassword(newPassword)) {
             console.printf("Password must be at least 10 characters in length and contain at least one uppercase letter, one number, and one special character (!&$@#*).\n");
-            passwordArray = console.readPassword("Enter password: ");
-            password = new String(passwordArray);
+            newPassword = new String(console.readPassword("Enter password: "));
         }
 
-        String hashedPassword = SecurityUtils.hashPassword(password);
+        String hashedPassword = SecurityUtils.hashPassword(newPassword);
 
         boolean userCreated = DatabaseUtils.createUser(username, email, false, hashedPassword);
         if (userCreated) {
@@ -324,13 +332,12 @@ public class Application {
             String resetCode = console.readLine();
 
             if (passwordResetHandler.verifyResetCode(resetCode)) {
-                System.out.print("Enter your new password: ");
                 String newPassword;
-                newPassword = console.readLine();
+                newPassword = new String(console.readPassword("Enter new password: "));
 
                 while (!isValidPassword(newPassword)) {
-                    System.out.println("Password must be at least 10 characters in length and contain at least one uppercase letter, one number, and one special character (!&$@#*).");
-                    newPassword = console.readLine();
+                    console.printf("Password must be at least 10 characters in length and contain at least one uppercase letter, one number, and one special character (!&$@#*).\n");
+                    newPassword = new String(console.readPassword("Enter new password: "));
                 }
 
                 String hashedPassword = SecurityUtils.hashPassword(newPassword);
