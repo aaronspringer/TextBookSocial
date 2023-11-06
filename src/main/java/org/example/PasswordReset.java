@@ -14,6 +14,10 @@ public class PasswordReset {
         this.emailService = new EmailService();
     }
 
+    public void resetAttempts(){
+        attempts = 0;
+    }
+
     public void recordFailedLoginAttempt() {
         attempts++;
     }

@@ -13,8 +13,7 @@ public class User {
     private boolean isAdmin;
     private String hashedPassword;
 
-    public User(int id, String username, String email, boolean isAdmin, String hashedPassword) {
-        this.id = id;
+    public User(String username, String email, boolean isAdmin, String hashedPassword) {
         this.username = username;
         this.email = email;
         this.isAdmin = isAdmin;
@@ -25,7 +24,6 @@ public class User {
     public String getHashedPassword(){
         return hashedPassword;
     }
-    // Getters and setters
     public int getId() {
         return id;
     }
@@ -63,10 +61,8 @@ public class User {
     }
 
     public void refresh() {
-        // Fetch the latest state from the database using the username
         User refreshedUser = DatabaseUtils.findUserByEmailOrUsername(this.username);
         if (refreshedUser != null) {
-            // Update the fields of the current user object
             this.id = refreshedUser.getId();
             this.email = refreshedUser.getEmail();
             this.isAdmin = refreshedUser.isAdmin();
@@ -80,20 +76,15 @@ public class User {
         PreparedStatement statement = null;
 
         try {
-            // Use DatabaseConnector to establish the connection
             connection = DatabaseConnector.connect();
 
-            // SQL query to update the user's password
             String sql = "UPDATE users SET hashedPassword = ? WHERE username = ?";
 
-            // Prepare the statement
             statement = connection.prepareStatement(sql);
 
-            // Set the parameters for the prepared statement
-            statement.setString(1, this.hashedPassword); // Assuming 'this.password' is the user's hashed password
-            statement.setString(2, this.username); // Assuming 'this.username' is the user's username
+            statement.setString(1, this.hashedPassword);
+            statement.setString(2, this.username);
 
-            // Execute the update
             statement.executeUpdate();
 
             System.out.println("User password updated successfully.");

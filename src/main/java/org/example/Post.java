@@ -11,9 +11,6 @@ public class Post {
         this.content = content;
     }
 
-    // Getters and setters for id, author, and content
-    // ...
-
     @Override
     public String toString() {
         return "Post ID: " + id + "\nAuthor: " + author + "\nContent: " + content;

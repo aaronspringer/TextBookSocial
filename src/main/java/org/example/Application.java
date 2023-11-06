@@ -6,7 +6,6 @@ import java.io.Console;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class Application {
     private static final Logger log = LoggerFactory.getLogger(Application.class);
     public static void main(String[] args) {
@@ -46,15 +45,10 @@ public class Application {
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
-                try {
-                    FileEncryptor.encrypt(DatabaseConnector.getKey(), DatabaseConnector.getDecryptedDbFile(), DatabaseConnector.getEncryptedDbFile());
-                    log.info("Encryption successful!");
-                } catch (Exception e) {
-                    console.printf("Error encrypting the database file: %s\n", e.getMessage());
-                }
+                DatabaseConnector.encryptDatabaseFile(console, log);
             }
         } else {
-            console.printf("Console is not available.\n");
+            System.out.println("Console is not available.\n");
         }
     }
 
@@ -76,14 +70,14 @@ public class Application {
                 newPassword = new String(console.readPassword("Enter password: "));
             }
 
-            // Hash the password
             String hashedPassword = SecurityUtils.hashPassword(newPassword);
 
-            // Save the admin user in the database
             DatabaseUtils.createUser(username, email, true, hashedPassword);
             console.printf("Admin account created successfully.\n");
         }
     }
+
+
 
 
     private static void displayMenu(User user, Console console) {
@@ -133,11 +127,13 @@ public class Application {
                 case "Q":
                     user = null;
                     console.printf("Goodbye!\n");
+                    DatabaseConnector.encryptDatabaseFile(console, log);
+                    System.exit(0);
                     break;
                 default:
                     console.printf("Invalid option. Please try again.\n");
             }
-        } while (!option.equals("Q"));
+        } while (true);
     }
 
     private static void readComments(Console console) {
@@ -250,7 +246,6 @@ public class Application {
 
         if (DatabaseUtils.emailExists(email)) {
             console.printf("An account with this email already exists.\n");
-            passwordReset(DatabaseUtils.findUserByEmailOrUsername(username), console);
             return null;
         }
 
@@ -263,13 +258,11 @@ public class Application {
             password = new String(passwordArray);
         }
 
-        // Hash the password
         String hashedPassword = SecurityUtils.hashPassword(password);
 
         boolean userCreated = DatabaseUtils.createUser(username, email, false, hashedPassword);
         if (userCreated) {
             console.printf("Account created successfully.\n");
-            // Automatically login the new user
             return new User(username, email, false, hashedPassword);
         } else {
             console.printf("Failed to create the account. Please try again.\n");
@@ -279,7 +272,6 @@ public class Application {
 
 
     private static void deletePost(User user, Console console) {
-        // Show only the posts of the logged-in user
         if (!user.isAdmin()) {
             DatabaseUtils.showUsersPosts(user);
         } else {
@@ -289,7 +281,6 @@ public class Application {
         console.printf("Enter the ID of the post you want to delete: ");
         String postId = console.readLine();
 
-        // No need to check if the user is the owner, as they can only see their own posts
         DatabaseUtils.deletePost(postId, user);
         console.printf("Post deleted successfully.\n");
     }
@@ -325,8 +316,7 @@ public class Application {
         String response = console.readLine();
 
         if ("yes".equalsIgnoreCase(response)) {
-            System.out.print("Enter your email associated with this account: ");
-            String email = console.readLine();
+            String email = user.getEmail();
             passwordResetHandler.initiatePasswordReset(email);
             System.out.println("Please check your email for the reset code.");
 
@@ -343,13 +333,12 @@ public class Application {
                     newPassword = console.readLine();
                 }
 
-                // Hash the new password
                 String hashedPassword = SecurityUtils.hashPassword(newPassword);
 
-                // Update the password in the database
                 DatabaseUtils.resetUserPassword(user.getUsername(), hashedPassword);
 
                 System.out.println("Your password has been reset successfully. Please log in again.");
+                passwordResetHandler.resetAttempts();
             } else {
                 System.out.println("Invalid or expired reset code.");
             }

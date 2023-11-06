@@ -44,7 +44,7 @@ public class DatabaseUtils {
             pstmt.executeUpdate();
             System.out.println("User created successfully.");
         } catch (SQLException e) {
-            if (e.getErrorCode() == 19) { // SQLite error code for a constraint violation.
+            if (e.getErrorCode() == 19) {
                 System.out.println("A user with that username or email already exists.");
             } else {
                 System.out.println(e.getMessage());
@@ -56,12 +56,7 @@ public class DatabaseUtils {
     public static void resetUserPassword(String username, String newPassword) {
         User user = findUserByEmailOrUsername(username);
         if (user != null) {
-            // Hash the new password before storing it
-            String hashedNewPassword = SecurityUtils.hashPassword(newPassword);
-
-            // Update the user's password
-            user.setPassword(hashedNewPassword);
-            // Save the updated user back to the database
+            user.setPassword(newPassword);
             user.save();
         }
     }
@@ -113,7 +108,6 @@ public class DatabaseUtils {
         try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                // Retrieve ID as a string
                 String id = rs.getString("id");
                 String author = rs.getString("author");
                 String text = rs.getString("text");
@@ -137,7 +131,6 @@ public class DatabaseUtils {
                 boolean isAdmin = rs.getBoolean("admin");
                 if (SecurityUtils.checkPassword(password, hashedPassword)) {
                     return new User(
-                            id,
                             username,
                             rs.getString("email"),
                             isAdmin,
@@ -163,15 +156,12 @@ public class DatabaseUtils {
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                int id = rs.getInt("id");
                 String username = rs.getString("username");
                 String email = rs.getString("email");
                 boolean admin = rs.getBoolean("admin");
                 String hashedPassword = rs.getString("hashedPassword");
 
-                // Assuming you have a constructor in your User class like this:
-                // User(int id, String username, String email, boolean admin, String hashedPassword)
-                return new User(id, username, email, admin, hashedPassword);
+                return new User(username, email, admin, hashedPassword);
             }
         } catch (SQLException e) {
             System.out.println("Error finding user: " + e.getMessage());
@@ -182,7 +172,7 @@ public class DatabaseUtils {
 
 
     public static void showUsersPosts(User user) {
-        String sql = "SELECT id, text FROM posts WHERE author = ?"; // Change "username" to "author"
+        String sql = "SELECT id, text FROM posts WHERE author = ?";
 
         try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, user.getUsername());
@@ -201,18 +191,16 @@ public class DatabaseUtils {
     public static void deletePost(String postId, User user) {
         String sql;
 
-        // If the user is an admin, they can delete any post
         if (user.isAdmin()) {
             sql = "DELETE FROM posts WHERE id = ?";
         } else {
-            // If the user is not an admin, they can only delete their own posts
             sql = "DELETE FROM posts WHERE id = ? AND author = ?";
         }
 
         try (Connection conn = connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, postId); // Use setString instead of setInt
+            pstmt.setString(1, postId);
             if (!user.isAdmin()) {
                 pstmt.setString(2, user.getUsername());
             }
@@ -267,7 +255,6 @@ public class DatabaseUtils {
             if (rs.next()) {
                 String author = rs.getString("author");
                 String content = rs.getString("text");
-                // You can also retrieve other fields if your Post object requires them
                 return new Post(postId, author, content);
             }
         } catch (SQLException e) {
@@ -281,7 +268,6 @@ public class DatabaseUtils {
         PreparedStatement pstmt = null;
 
         try {
-            // Check if the user is the comment's author, the post's author, or an admin
             String sqlCheck = "SELECT c.author AS commentAuthor, p.author AS postAuthor " +
                     "FROM comments c " +
                     "JOIN posts p ON c.postId = p.id " +
@@ -294,14 +280,12 @@ public class DatabaseUtils {
             if (rs.next()) {
                 String commentAuthor = rs.getString("commentAuthor");
                 String postAuthor = rs.getString("postAuthor");
-                // If the user is the comment's author, the post's author, or an admin
                 if (user.getUsername().equals(commentAuthor) || user.getUsername().equals(postAuthor) || user.isAdmin()) {
                     isAllowedToDelete = true;
                 }
             }
 
             if (isAllowedToDelete) {
-                // Delete the comment
                 String sqlDelete = "DELETE FROM comments WHERE id = ?";
                 pstmt = conn.prepareStatement(sqlDelete);
                 pstmt.setInt(1, commentId);
@@ -330,7 +314,6 @@ public class DatabaseUtils {
             pstmt.setString(1, username);
             ResultSet rs = pstmt.executeQuery();
 
-            // If the result set is not empty, the username exists
             return rs.next();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -346,7 +329,6 @@ public class DatabaseUtils {
             pstmt.setString(1, email);
             ResultSet rs = pstmt.executeQuery();
 
-            // If the result set is not empty, the email exists
             return rs.next();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
