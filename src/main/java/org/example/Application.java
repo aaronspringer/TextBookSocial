@@ -14,9 +14,10 @@ public class Application {
         Console console = System.console();
 
         if (console != null) {
+            DatabaseConnector.decryptDatabase();
             try (Connection conn = DatabaseConnector.connect()) {
                 if (conn != null) {
-                    DatabaseInitializer.initializeDatabase();
+                    DatabaseInitializer.initializeDatabase(conn);
 
                     try {
                         createFirstAdmin(console);
@@ -220,9 +221,19 @@ public class Application {
                 passwordResetHandler.recordFailedLoginAttempt();
 
                 if (passwordResetHandler.shouldOfferReset()) {
-                    passwordReset(user, console);
+                    console.printf("You have reached the maximum number of login attempts.\n");
+                    String emailOrUsername = console.readLine("Enter your email or username to reset your password: ");
+                    User userForReset = DatabaseUtils.findUserByEmailOrUsername(emailOrUsername);
+
+                    if (userForReset != null) {
+                        passwordReset(userForReset, console);
+                    } else {
+                        console.printf("No user found with the provided email or username.\n");
+                    }
                 }
             }
+
+
         }
         return user;
     }
@@ -237,11 +248,10 @@ public class Application {
         console.printf("Enter email: ");
         String email = console.readLine();
 
-        // Check if the email is already associated with an account
         if (DatabaseUtils.emailExists(email)) {
             console.printf("An account with this email already exists.\n");
-            passwordReset(DatabaseUtils.getUserByUsername(username), console); // Offer to reset the password
-            return null; // Return null as no new account is created
+            passwordReset(DatabaseUtils.findUserByEmailOrUsername(username), console);
+            return null;
         }
 
         char[] passwordArray = console.readPassword("Enter password: ");

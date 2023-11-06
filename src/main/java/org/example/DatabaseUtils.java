@@ -54,7 +54,7 @@ public class DatabaseUtils {
     }
 
     public static void resetUserPassword(String username, String newPassword) {
-        User user = getUserByUsername(username);
+        User user = findUserByEmailOrUsername(username);
         if (user != null) {
             // Hash the new password before storing it
             String hashedNewPassword = SecurityUtils.hashPassword(newPassword);
@@ -132,10 +132,12 @@ public class DatabaseUtils {
             pstmt.setString(1, username);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
+                int id = rs.getInt("id");
                 String hashedPassword = rs.getString("hashedPassword");
                 boolean isAdmin = rs.getBoolean("admin");
                 if (SecurityUtils.checkPassword(password, hashedPassword)) {
                     return new User(
+                            id,
                             username,
                             rs.getString("email"),
                             isAdmin,
@@ -149,22 +151,32 @@ public class DatabaseUtils {
         return null;
     }
 
-    public static User getUserByUsername(String username) {
-        String sql = "SELECT * FROM users WHERE username = ?";
-        try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setString(1, username);
+    public static User findUserByEmailOrUsername(String emailOrUsername) {
+        String sql = "SELECT * FROM users WHERE email = ? OR username = ?";
+
+        try (Connection conn = DatabaseConnector.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, emailOrUsername);
+            pstmt.setString(2, emailOrUsername);
+
             ResultSet rs = pstmt.executeQuery();
+
             if (rs.next()) {
-                return new User(
-                        rs.getString("username"),
-                        rs.getString("email"),
-                        rs.getBoolean("admin"),
-                        rs.getString("hashedPassword")
-                );
+                int id = rs.getInt("id");
+                String username = rs.getString("username");
+                String email = rs.getString("email");
+                boolean admin = rs.getBoolean("admin");
+                String hashedPassword = rs.getString("hashedPassword");
+
+                // Assuming you have a constructor in your User class like this:
+                // User(int id, String username, String email, boolean admin, String hashedPassword)
+                return new User(id, username, email, admin, hashedPassword);
             }
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            System.out.println("Error finding user: " + e.getMessage());
         }
+
         return null;
     }
 

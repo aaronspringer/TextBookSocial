@@ -22,15 +22,23 @@ public class PasswordReset {
         return attempts >= MAX_ATTEMPTS;
     }
 
-    public void initiatePasswordReset(String recipientEmail) {
+    private static final String ALPHANUMERIC_CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private static final int CODE_LENGTH = 6;
+    private static final SecureRandom secureRandom = new SecureRandom();
 
-        byte[] randomBytes = new byte[24];
-        SecureRandom secureRandom = new SecureRandom();
-        secureRandom.nextBytes(randomBytes);
-        String token = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+    private String generateAlphanumericCode() {
+        StringBuilder code = new StringBuilder(CODE_LENGTH);
+        for (int i = 0; i < CODE_LENGTH; i++) {
+            int randomIndex = secureRandom.nextInt(ALPHANUMERIC_CHARS.length());
+            code.append(ALPHANUMERIC_CHARS.charAt(randomIndex));
+        }
+        return code.toString();
+    }
+
+    public void initiatePasswordReset(String recipientEmail) {
+        String token = generateAlphanumericCode();
 
         hashedResetCode = SecurityUtils.hashPassword(token);
-
         resetCodeTimestamp = System.currentTimeMillis();
 
         emailService.sendPasswordResetEmail(recipientEmail, token);

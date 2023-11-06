@@ -13,7 +13,8 @@ public class User {
     private boolean isAdmin;
     private String hashedPassword;
 
-    public User(String username, String email, boolean isAdmin, String hashedPassword) {
+    public User(int id, String username, String email, boolean isAdmin, String hashedPassword) {
+        this.id = id;
         this.username = username;
         this.email = email;
         this.isAdmin = isAdmin;
@@ -63,7 +64,7 @@ public class User {
 
     public void refresh() {
         // Fetch the latest state from the database using the username
-        User refreshedUser = DatabaseUtils.getUserByUsername(this.username);
+        User refreshedUser = DatabaseUtils.findUserByEmailOrUsername(this.username);
         if (refreshedUser != null) {
             // Update the fields of the current user object
             this.id = refreshedUser.getId();

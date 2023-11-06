@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 public class DatabaseInitializer {
 
-    public static void initializeDatabase() {
+    public static void initializeDatabase(Connection conn) {
         String sqlCreateUsers =
                 "CREATE TABLE IF NOT EXISTS users (" +
                         "id INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -34,7 +34,7 @@ public class DatabaseInitializer {
                         "FOREIGN KEY (userId) REFERENCES users(id));";
 
 
-        try (Connection conn = DatabaseConnector.connect(); Statement stmt = conn.createStatement()) {
+        try (Statement stmt = conn.createStatement()) {
             stmt.execute(sqlCreateUsers);
             stmt.execute(sqlCreatePosts);
             stmt.execute(sqlCreateComments);
