@@ -83,7 +83,7 @@ public class Application {
     }
 
 
-    private static void displayMenu(User user, Console console) {
+    private static void displayMenu(User user, Console console) throws InterruptedException {
         String option;
         do {
             console.printf("\n(P)rint TextBookSocial posts\n" +
@@ -189,7 +189,8 @@ public class Application {
     private static User authenticate(Console console) {
         User user = null;
         while (user == null) {
-            console.printf("Welcome to TextBookSocial!\n");
+            TextUtils.clearDisplay();
+            TextUtils.printLogo();
             console.printf("Do you want to (L)ogin, (S)ign up, or (Q)uit?\n");
             String choice = console.readLine().toUpperCase();
             switch (choice) {
@@ -229,6 +230,7 @@ public class Application {
             user = DatabaseUtils.loginUser(username, password);
 
             if (user != null) {
+                TextUtils.clearDisplay();
                 console.printf("%s, welcome to TextBookSocial!\n", user.getUsername());
             }
 
@@ -289,7 +291,13 @@ public class Application {
     }
 
 
-    private static void deletePost(User user, Console console) {
+    private static void deletePost(User user, Console console) throws InterruptedException {
+        if(DatabaseUtils.isCommentsTableEmpty()){
+            console.printf("No posts exist.");
+            Thread.sleep(300);
+            TextUtils.clearDisplay();
+            return;
+        }
         if (!user.isAdmin()) {
             DatabaseUtils.showUsersPosts(user);
         } else {
@@ -300,10 +308,13 @@ public class Application {
         String postId = console.readLine();
 
         DatabaseUtils.deletePost(postId, user);
-        console.printf("Post deleted successfully.\n");
     }
 
     private static void deleteComment(User user, Console console) {
+        if(DatabaseUtils.isCommentsTableEmpty()){
+            console.printf("No posts exist. Can't delete a comment if there is no post!");
+            return;
+        }
         DatabaseUtils.fetchPosts();
         console.printf("What post would you like to delete the comments from?\n");
         String post = console.readLine();

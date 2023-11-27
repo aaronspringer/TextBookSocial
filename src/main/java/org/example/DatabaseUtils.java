@@ -10,9 +10,6 @@ public class DatabaseUtils {
 
     private static final String ALPHA_NUMERIC_STRING = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz";
 
-    public static Connection connect() throws SQLException {
-        return DriverManager.getConnection(CONNECTION_STRING);
-    }
 
     public static boolean isUsersTableEmpty() {
         log.info("Checking for empty users table");
@@ -28,6 +25,40 @@ public class DatabaseUtils {
             log.error(e.getMessage());
         }
         log.info("Users table not empty");
+        return false;
+    }
+
+    public static boolean isPostsTableEmpty() {
+        log.info("Checking for empty comments table");
+        String sql = "SELECT COUNT(*) AS rowcount FROM posts";
+        try (Connection conn = DatabaseConnector.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                log.info("Posts table is empty");
+                return rs.getInt("rowcount") == 0;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            log.error(e.getMessage());
+        }
+        log.info("Posts table not empty");
+        return false;
+    }
+
+    public static boolean isCommentsTableEmpty() {
+        log.info("Checking for empty comments table");
+        String sql = "SELECT COUNT(*) AS rowcount FROM comments";
+        try (Connection conn = DatabaseConnector.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                log.info("Comments table is empty");
+                return rs.getInt("rowcount") == 0;
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            log.error(e.getMessage());
+        }
+        log.info("Comments table not empty");
         return false;
     }
 
@@ -88,7 +119,7 @@ public class DatabaseUtils {
         log.info("Checking for post ID");
         String sql = "SELECT id FROM posts WHERE id = ?";
 
-        try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnector.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, postId);
             ResultSet rs = pstmt.executeQuery();
             log.info("Found post with ID");
@@ -109,7 +140,7 @@ public class DatabaseUtils {
 
         String sql = "INSERT INTO posts(id, author, text, timestamp) VALUES(?,?,?,datetime('now'))";
 
-        try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnector.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, postId);
             pstmt.setString(2, author);
             pstmt.setString(3, text);
@@ -125,7 +156,7 @@ public class DatabaseUtils {
         log.info("Looking for posts");
         String sql = "SELECT id, author, text, timestamp FROM posts";
         int count = 0;
-        try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnector.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
 
@@ -141,12 +172,15 @@ public class DatabaseUtils {
             log.error(e.getMessage());
         }
         log.info("Found " + count + " posts");
+        if (count == 0) {
+            System.out.println("No posts found.");
+        }
     }
 
 
     public static User loginUser(String username, String password) {
         String sql = "SELECT * FROM users WHERE username = ?";
-        try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnector.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, username);
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
@@ -203,7 +237,7 @@ public class DatabaseUtils {
         String sql = "SELECT id, text FROM posts WHERE author = ?";
         log.info("Attempting to show posts from user: " + user.getId());
 
-        try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnector.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, user.getUsername());
             ResultSet rs = pstmt.executeQuery();
             int count = 0;
@@ -222,6 +256,10 @@ public class DatabaseUtils {
 
 
     public static void deletePost(String postId, User user) {
+        if (!doesPostIdExist(postId)) {
+            System.out.println("Post with ID " + postId + " does not exist.");
+            return;
+        }
         String sql;
 
         if (user.isAdmin()) {
@@ -232,7 +270,7 @@ public class DatabaseUtils {
             sql = "DELETE FROM posts WHERE id = ? AND author = ?";
         }
 
-        try (Connection conn = connect();
+        try (Connection conn = DatabaseConnector.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, postId);
@@ -242,6 +280,7 @@ public class DatabaseUtils {
 
             int affectedRows = pstmt.executeUpdate();
             log.info("Deleted post " + postId);
+            System.out.println("Deleted post " + postId);
         } catch (SQLException e) {
             System.out.println("Error when attempting to delete post: " + e.getMessage());
             log.error(e.getMessage());
@@ -252,7 +291,7 @@ public class DatabaseUtils {
     public static void createComment(String postId, String author, String text) {
         String sql = "INSERT INTO comments(postId, author, text, timestamp) VALUES(?,?,?,datetime('now'))";
         log.info("Creating a comment");
-        try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnector.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, postId);
             pstmt.setString(2, author);
             pstmt.setString(3, text);
@@ -265,10 +304,11 @@ public class DatabaseUtils {
     }
 
 
+
     public static void fetchComments(String postId) {
         String sql = "SELECT id, author, text, timestamp FROM comments WHERE postId = ?";
 
-        try (Connection conn = connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConnector.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, postId);
             ResultSet rs = pstmt.executeQuery();
             int count = 0;
@@ -280,17 +320,22 @@ public class DatabaseUtils {
                 count++;
             }
             log.info("Fetched "+count+" comments from post "+postId);
-        } catch (SQLException e) {
+            if (count == 0) {
+                System.out.println("No comments found for post with ID " + postId);
+            }
+        }catch (SQLException e) {
             System.out.println(e.getMessage());
             log.error(e.getMessage());
         }
+
+
     }
 
 
     public static Post fetchPostById(String postId) {
         String sql = "SELECT * FROM posts WHERE id = ?";
 
-        try (Connection conn = connect();
+        try (Connection conn = DatabaseConnector.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setString(1, postId);
@@ -312,6 +357,10 @@ public class DatabaseUtils {
 
     public static void deleteComment(int commentId, User user) {
         Connection conn = DatabaseConnector.connect();
+        if (!doesCommentIdExist(commentId)) {
+            System.out.println("Comment with ID " + commentId + " does not exist.");
+            return;
+        }
         PreparedStatement pstmt = null;
 
         try {
@@ -387,6 +436,22 @@ public class DatabaseUtils {
         }
         return false;
     }
+
+    public static boolean doesCommentIdExist(int commentId) {
+        String sql = "SELECT id FROM comments WHERE id = ?";
+
+        try (Connection conn = DatabaseConnector.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, commentId);
+            ResultSet rs = pstmt.executeQuery();
+            return rs.next();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            log.error(e.getMessage());
+            return false;
+        }
+    }
+
 
 
     //TODO:more

@@ -8,7 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import org.slf4j.Logger;
+import java.sql.Statement;
+
 import org.slf4j.LoggerFactory;
 public class DatabaseConnector {
     private static final Logger log = LoggerFactory.getLogger(DatabaseConnector.class);
@@ -21,17 +22,21 @@ public class DatabaseConnector {
         try {
             String url = "jdbc:sqlite:" + DECRYPTED_DB_FILE;
             conn = DriverManager.getConnection(url);
-            log.info("Connected to " + DECRYPTED_DB_FILE);
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute("PRAGMA foreign_keys = ON;");
+            }
+            log.info("Connected to " + DECRYPTED_DB_FILE + " with foreign key support enabled.");
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
         return conn;
     }
 
+
     public static void decryptDatabase() {
         try {
             if (Files.exists(Paths.get(ENCRYPTED_DB_FILE))) {
-                String key = getKey(); // Retrieve the key from the environment variable
+                String key = getKey();
                 FileDecryptor.decrypt(key, ENCRYPTED_DB_FILE, DECRYPTED_DB_FILE);
                 log.info("Decrypted " + ENCRYPTED_DB_FILE);
             }
@@ -42,7 +47,7 @@ public class DatabaseConnector {
 
     public static void encryptDatabaseFile(Console console, Logger log) {
         try {
-            String key = getKey(); // Retrieve the key from the environment variable
+            String key = getKey();
             FileEncryptor.encrypt(key, getDecryptedDbFile(), getEncryptedDbFile());
             log.info("Encrypted " + getEncryptedDbFile());
 
@@ -66,7 +71,7 @@ public class DatabaseConnector {
     }
 
     public static String getKey() {
-        return System.getenv("DB_ENCRYPTION_KEY"); // Retrieve the key from an environment variable
+        return System.getenv("DB_ENCRYPTION_KEY");
     }
 }
 

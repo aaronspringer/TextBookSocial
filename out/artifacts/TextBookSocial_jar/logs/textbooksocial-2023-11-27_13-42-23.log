@@ -1,0 +1,15 @@
+2023-11-27 13:42:23,255 INFO [main] o.e.Application [Application.java:16] Starting TextBookSocial.java
+2023-11-27 13:42:23,259 INFO [main] o.e.Application [Application.java:20] Decrypting database
+2023-11-27 13:42:23,358 INFO [main] o.e.DatabaseConnector [DatabaseConnector.java:28] Connected to db.sqlite with foreign key support enabled.
+2023-11-27 13:42:23,358 INFO [main] o.e.DatabaseInitializer [DatabaseInitializer.java:42] Foreign key support enabled
+2023-11-27 13:42:23,363 INFO [main] o.e.DatabaseInitializer [DatabaseInitializer.java:45] Created or loaded users table
+2023-11-27 13:42:23,364 INFO [main] o.e.DatabaseInitializer [DatabaseInitializer.java:48] Created or loaded posts table
+2023-11-27 13:42:23,366 INFO [main] o.e.DatabaseInitializer [DatabaseInitializer.java:51] Created or loaded comments table
+2023-11-27 13:42:23,366 INFO [main] o.e.DatabaseUtils [DatabaseUtils.java:15] Checking for empty users table
+2023-11-27 13:42:23,367 INFO [main] o.e.DatabaseConnector [DatabaseConnector.java:28] Connected to db.sqlite with foreign key support enabled.
+2023-11-27 13:42:23,369 INFO [main] o.e.DatabaseUtils [DatabaseUtils.java:20] Users table is empty
+2023-11-27 13:42:44,167 INFO [main] o.e.DatabaseUtils [DatabaseUtils.java:66] Creating new user
+2023-11-27 13:42:44,167 INFO [main] o.e.DatabaseConnector [DatabaseConnector.java:28] Connected to db.sqlite with foreign key support enabled.
+2023-11-27 13:42:44,168 INFO [main] o.e.DatabaseConnector [DatabaseConnector.java:28] Connected to db.sqlite with foreign key support enabled.
+2023-11-27 13:42:44,168 INFO [main] o.e.DatabaseConnector [DatabaseConnector.java:28] Connected to db.sqlite with foreign key support enabled.
+2023-11-27 13:42:44,171 INFO [main] o.e.DatabaseUtils [DatabaseUtils.java:86] Created user from input
