@@ -264,6 +264,7 @@ public class DatabaseUtils {
         }
     }
 
+
     public static void fetchComments(String postId) {
         String sql = "SELECT id, author, text, timestamp FROM comments WHERE postId = ?";
 

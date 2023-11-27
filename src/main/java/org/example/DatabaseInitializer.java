@@ -30,12 +30,11 @@ public class DatabaseInitializer {
                 "CREATE TABLE IF NOT EXISTS comments (" +
                         "id INTEGER PRIMARY KEY AUTOINCREMENT," +
                         "postId INTEGER NOT NULL," +
-                        "userId INTEGER NOT NULL," +
                         "author TEXT NOT NULL," +
                         "text TEXT NOT NULL," +
                         "timestamp TEXT NOT NULL," +
-                        "FOREIGN KEY (postId) REFERENCES posts(id)," +
-                        "FOREIGN KEY (userId) REFERENCES users(id));";
+                        "FOREIGN KEY (postId) REFERENCES posts(id));";
+
 
 
         try (Statement stmt = conn.createStatement()) {
