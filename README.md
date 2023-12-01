@@ -1,4 +1,7 @@
-Encryption requires export DB_ENCRYPTION_KEY="any16digitcode"
+Encryption requires 
+```
+export DB_ENCRYPTION_KEY="any16digitcode"
+```
 Email funcionality requires another key, ask me for it if you want that functionality.
 
 
