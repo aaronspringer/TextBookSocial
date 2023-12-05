@@ -15,7 +15,6 @@ public class DatabaseConnector {
     private static final Logger log = LoggerFactory.getLogger(DatabaseConnector.class);
     private static final String ENCRYPTED_DB_FILE = "edb.sqlite";
     private static final String DECRYPTED_DB_FILE = "db.sqlite";
-    // Removed the hardcoded key
 
     public static Connection connect() {
         Connection conn = null;
