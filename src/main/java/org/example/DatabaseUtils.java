@@ -23,6 +23,8 @@ public class DatabaseUtils {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             log.error(e.getMessage());
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
         }
         log.info("Users table not empty");
         return false;
@@ -40,6 +42,8 @@ public class DatabaseUtils {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             log.error(e.getMessage());
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
         }
         log.info("Posts table not empty");
         return false;
@@ -57,49 +61,75 @@ public class DatabaseUtils {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             log.error(e.getMessage());
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
         }
         log.info("Comments table not empty");
         return false;
     }
 
-    public static boolean createUser(String username, String email, boolean isAdmin, String hashedPassword) {
+    public static boolean createUser(String username, String email, boolean isAdmin, String hashedPassword, int firstlogin) {
         log.info("Creating new user");
         if (usernameExists(username)) {
-            log.info("Attempted to create a user with the same username as an existing user");
+            log.info("Attempted to create a user with an existing username");
             System.out.println("Username already exists. Please choose another one.");
             return false;
         }
         if (emailExists(email)) {
-            log.info("Attempted to create a user with the same email as an existing user");
+            log.info("Attempted to create a user with an existing email");
             System.out.println("Email already exists. Please choose another one.");
             return false;
         }
 
-        String sqlInsertUser = "INSERT INTO users (username, email, admin, hashedPassword) VALUES (?, ?, ?, ?)";
+        String sqlInsertUser = "INSERT INTO users (username, email, admin, hashedPassword, firstlogin) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnector.connect(); PreparedStatement pstmt = conn.prepareStatement(sqlInsertUser)) {
             pstmt.setString(1, username);
             pstmt.setString(2, email);
             pstmt.setBoolean(3, isAdmin);
             pstmt.setString(4, hashedPassword);
+            pstmt.setInt(5, firstlogin);
             pstmt.executeUpdate();
             System.out.println("User created successfully.");
-            log.info("Created user from input");
+            log.info("User created with username: " + username);
+            return true;
         } catch (SQLException e) {
+            log.error("Error creating user: " + e.getMessage());
             if (e.getErrorCode() == 19) {
                 System.out.println("A user with that username or email already exists.");
             } else {
                 System.out.println(e.getMessage());
-                log.error(e.getMessage());
             }
+            return false;
+        } finally {
+            DatabaseConnector.encryptDatabaseFile();
         }
-        return true;
     }
+
+
+    public static void swapRole(User user, String username){
+        log.info("Swapping "+username+" role");
+        String sql = "UPDATE users SET admin = ? WHERE username = ?";
+        try (Connection conn = DatabaseConnector.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setBoolean(1, !user.isAdmin());
+            pstmt.setString(2, username);
+            pstmt.executeUpdate();
+            System.out.println("User role changed successfully.");
+            log.info("Swapped user role");
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            log.error(e.getMessage());
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
+        }
+    }
+
 
     public static void resetUserPassword(String username, String newPassword) {
         User user = findUserByEmailOrUsername(username);
         if (user != null) {
             log.info("Changing users password to hashed password");
             user.setPassword(newPassword);
+            user.setFirstLogin(0);
             user.save();
         }
     }
@@ -127,6 +157,8 @@ public class DatabaseUtils {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             log.error(e.getMessage());
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
         }
         return false;
     }
@@ -149,6 +181,8 @@ public class DatabaseUtils {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             log.error(e.getMessage());
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
         }
     }
 
@@ -170,6 +204,8 @@ public class DatabaseUtils {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             log.error(e.getMessage());
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
         }
         log.info("Found " + count + " posts");
         if (count == 0) {
@@ -194,13 +230,16 @@ public class DatabaseUtils {
                             username,
                             rs.getString("email"),
                             isAdmin,
-                            hashedPassword
+                            hashedPassword,
+                            rs.getInt("firstlogin")
                     );
                 }
             }
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             log.error(e.getMessage());
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
         }
         return null;
     }
@@ -221,12 +260,15 @@ public class DatabaseUtils {
                 String email = rs.getString("email");
                 boolean admin = rs.getBoolean("admin");
                 String hashedPassword = rs.getString("hashedPassword");
+                int firstlogin = rs.getInt("firstlogin");
 
-                return new User(username, email, admin, hashedPassword);
+                return new User(username, email, admin, hashedPassword, firstlogin);
             }
         } catch (SQLException e) {
             System.out.println("Error finding user: " + e.getMessage());
             log.error(e.getMessage());
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
         }
 
         return null;
@@ -251,6 +293,8 @@ public class DatabaseUtils {
         } catch (SQLException e) {
             System.out.println("Error when attempting to display posts: " + e.getMessage());
             log.error(e.getMessage());
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
         }
     }
 
@@ -278,12 +322,13 @@ public class DatabaseUtils {
                 pstmt.setString(2, user.getUsername());
             }
 
-            int affectedRows = pstmt.executeUpdate();
             log.info("Deleted post " + postId);
             System.out.println("Deleted post " + postId);
         } catch (SQLException e) {
             System.out.println("Error when attempting to delete post: " + e.getMessage());
             log.error(e.getMessage());
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
         }
     }
 
@@ -300,6 +345,8 @@ public class DatabaseUtils {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             log.error(e.getMessage());
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
         }
     }
 
@@ -326,6 +373,8 @@ public class DatabaseUtils {
         }catch (SQLException e) {
             System.out.println(e.getMessage());
             log.error(e.getMessage());
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
         }
 
 
@@ -350,6 +399,8 @@ public class DatabaseUtils {
         } catch (SQLException e) {
             System.out.println("Error when attempting to fetch post: " + e.getMessage());
             log.error(e.getMessage());
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
         }
         log.info("Could not find post "+postId);
         return null;
@@ -393,14 +444,8 @@ public class DatabaseUtils {
         } catch (SQLException e) {
             System.out.println("SQL Error: " + e.getMessage());
             log.error(e.getMessage());
-        } finally {
-            try {
-                if (pstmt != null) pstmt.close();
-                conn.close();
-            } catch (SQLException ex) {
-                System.out.println("SQL Error: " + ex.getMessage());
-                log.error(ex.getMessage());
-            }
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
         }
     }
 
@@ -417,6 +462,8 @@ public class DatabaseUtils {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             log.error(e.getMessage());
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
         }
         return false;
     }
@@ -433,6 +480,8 @@ public class DatabaseUtils {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             log.error(e.getMessage());
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
         }
         return false;
     }
@@ -449,10 +498,49 @@ public class DatabaseUtils {
             System.out.println(e.getMessage());
             log.error(e.getMessage());
             return false;
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
         }
     }
 
+    public static void deleteUser(String usernameToDelete) {
+        String sql = "DELETE FROM users WHERE username = ?";
+        try (Connection conn = DatabaseConnector.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, usernameToDelete);
+            pstmt.executeUpdate();
+            System.out.println("User " + usernameToDelete + " deleted successfully.");
+            log.info("Deleted user "+usernameToDelete);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            log.error(e.getMessage());
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
+        }
+    }
 
+    public static void fetchUsers() {
+        String sql = "SELECT username, email, admin FROM users";
+        try (Connection conn = DatabaseConnector.connect(); PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            ResultSet rs = pstmt.executeQuery();
+            int count = 0;
+            while (rs.next()) {
+                String username = rs.getString("username");
+                String email = rs.getString("email");
+                boolean admin = rs.getBoolean("admin");
+                System.out.println("Username: " + username + "\tEmail: " + email + "\tAdmin: " + admin);
+                count++;
+            }
+            log.info("Found "+count+" users");
+            if (count == 0) {
+                System.out.println("No users found.");
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            log.error(e.getMessage());
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
+        }
+    }
 
     //TODO:more
 }

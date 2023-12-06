@@ -1,16 +1,15 @@
 package org.example;
 
 import java.security.SecureRandom;
-import java.util.Base64;
 
-public class PasswordReset {
+public class ForgotPassword {
     private int attempts = 0;
     private static final int MAX_ATTEMPTS = 3;
     private String hashedResetCode;
     private long resetCodeTimestamp;
     private EmailService emailService;
 
-    public PasswordReset() {
+    public ForgotPassword() {
         this.emailService = new EmailService();
     }
 
@@ -54,7 +53,7 @@ public class PasswordReset {
         if (SecurityUtils.checkPassword(inputCode, hashedResetCode)) {
             long currentTime = System.currentTimeMillis();
             if ((currentTime - resetCodeTimestamp) <= 2 * 60 * 1000) {
-                attempts = 0;
+                resetAttempts();
                 return true;
             }
         }

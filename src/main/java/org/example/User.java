@@ -13,12 +13,16 @@ public class User {
     private boolean isAdmin;
     private String hashedPassword;
 
-    public User(String username, String email, boolean isAdmin, String hashedPassword) {
+    private int firstLogin = 1;
+
+    public User(String username, String email, boolean isAdmin, String hashedPassword, int firstLogin) {
         this.username = username;
         this.email = email;
         this.isAdmin = isAdmin;
         this.hashedPassword = hashedPassword;
+        this.firstLogin = firstLogin;
     }
+
 
 
     public String getHashedPassword(){
@@ -56,6 +60,15 @@ public class User {
         isAdmin = admin;
     }
 
+    public int isFirstLogin() {
+        return firstLogin;
+    }
+
+    public void setFirstLogin(int firstLogin) {
+        this.firstLogin = firstLogin;
+    }
+
+
     public void setPassword(String hashedPassword) {
         this.hashedPassword = hashedPassword;
     }
@@ -67,41 +80,27 @@ public class User {
             this.email = refreshedUser.getEmail();
             this.isAdmin = refreshedUser.isAdmin();
             this.hashedPassword = refreshedUser.getHashedPassword();
+            this.firstLogin = refreshedUser.isFirstLogin();
         }
     }
 
 
     public void save() {
-        Connection connection = null;
-        PreparedStatement statement = null;
+        String sql = "UPDATE users SET hashedPassword = ?, firstLogin = ? WHERE username = ?";
 
-        try {
-            connection = DatabaseConnector.connect();
-
-            String sql = "UPDATE users SET hashedPassword = ? WHERE username = ?";
-
-            statement = connection.prepareStatement(sql);
+        try (Connection connection = DatabaseConnector.connect();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
 
             statement.setString(1, this.hashedPassword);
-            statement.setString(2, this.username);
-
+            statement.setInt(2, this.firstLogin);
+            statement.setString(3, this.username);
             statement.executeUpdate();
-
-            System.out.println("User password updated successfully.");
 
         } catch (SQLException e) {
             System.out.println("Error updating user password: " + e.getMessage());
-        } finally {
-            try {
-                if (statement != null) {
-                    statement.close();
-                }
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException ex) {
-                System.out.println("Error closing resources: " + ex.getMessage());
-            }
+        }finally{
+            DatabaseConnector.encryptDatabaseFile();
         }
     }
+
 }
