@@ -50,7 +50,7 @@ public class Application {
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
-                DatabaseConnector.encryptDatabaseFile(console, log);
+                DatabaseConnector.encryptDatabaseFile();
             }
         } else {
             System.out.println("Console is not available.\n");
@@ -142,7 +142,7 @@ public class Application {
                     log.info("Quit TextBook");
                     user = null;
                     console.printf("Goodbye!\n");
-                    DatabaseConnector.encryptDatabaseFile(console, log);
+                    DatabaseConnector.encryptDatabaseFile();
                     System.exit(0);
                     break;
                 default:
@@ -202,7 +202,7 @@ public class Application {
                     break;
                 case "Q":
                     console.printf("Goodbye!\n");
-                    DatabaseConnector.encryptDatabaseFile(console, log);
+                    DatabaseConnector.encryptDatabaseFile();
                     System.exit(0);
                     break;
                 default:
