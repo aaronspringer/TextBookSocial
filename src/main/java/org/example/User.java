@@ -86,7 +86,7 @@ public class User {
 
 
     public void save() {
-        String sql = "UPDATE users SET hashedPassword = ?, firstLogin = ? WHERE username = ?";
+        String sql = "UPDATE users SET hashedPassword = ?";
 
         try (Connection connection = DatabaseConnector.connect();
              PreparedStatement statement = connection.prepareStatement(sql)) {

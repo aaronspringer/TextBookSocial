@@ -10,19 +10,16 @@ import org.slf4j.LoggerFactory;
 
 public class Application {
     private static final Logger log = LoggerFactory.getLogger(Application.class);
-
     public static void main(String[] args) {
         LogDirectoryCreator.createLogDirectoryIfNotExists("logs");
         log.info("Starting TextBookSocial.java");
         Console console = System.console();
-
         if (console != null) {
             log.info("Decrypting database");
             DatabaseConnector.decryptDatabase();
             try (Connection conn = DatabaseConnector.connect()) {
                 if (conn != null) {
                     DatabaseInitializer.initializeDatabase(conn);
-
                     try {
                         createFirstAdmin(console);
                         User user = null;
@@ -35,11 +32,9 @@ public class Application {
                                 break;
                             }
                         }
-
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
-
                         try {
                             conn.close();
                         } catch (SQLException e) {
@@ -55,17 +50,15 @@ public class Application {
         }
     }
 
+
     private static void createFirstAdmin(Console console) {
         if (DatabaseUtils.isUsersTableEmpty()) {
             console.printf("No admin account found. Set up initial admin account.\n");
-
             console.printf("Enter username: ");
             String username = console.readLine();
 
             console.printf("Enter email: ");
             String email = console.readLine();
-
-
 
             String hashedPassword = SecurityUtils.createPassword();
 
@@ -156,7 +149,6 @@ public class Application {
                         "(Q)uit\n\n" +
                         "Select an option or M for menu: ");
                 option = console.readLine().toUpperCase();
-
                 switch (option) {
                     case "P":
                         TextUtils.clearDisplay();
@@ -175,10 +167,10 @@ public class Application {
                         TextUtils.clearDisplay();
                         commentOnPost(user, console);
                         break;
-//                    case "RC":
-//                        TextUtils.clearDisplay();
-//                        readComments(console);
-//                        break;
+                    // case "RC":
+                        // TextUtils.clearDisplay();
+                        // readComments(console);
+                        // break;
                     case "DC":
                         TextUtils.clearDisplay();
                         deleteComment(user, console);
@@ -207,6 +199,7 @@ public class Application {
             } while (true);
         }
     }
+
 
     private static void adminMenu(User user) throws InterruptedException {
         Console console = System.console();
@@ -358,13 +351,10 @@ public class Application {
         return user;
     }
 
-
     private static User login(Console console) {
         User user = null;
         ForgotPassword passwordResetHandler = new ForgotPassword();
-
         console.printf("Login to TextBookSocial\n");
-
         while (user == null) {
             console.printf("Enter username: ");
             String username = console.readLine();
@@ -433,7 +423,6 @@ public class Application {
         }
     }
 
-
     private static void deletePost(User user, Console console) throws InterruptedException {
         if(DatabaseUtils.isPostsTableEmpty()){
             console.printf("No posts exist.");
@@ -446,10 +435,8 @@ public class Application {
         } else {
             DatabaseUtils.fetchPosts();
         }
-
         console.printf("Enter the ID of the post you want to delete: ");
         String postId = console.readLine();
-
         DatabaseUtils.deletePost(postId, user);
     }
 
@@ -469,22 +456,16 @@ public class Application {
         console.printf("Comment successfully deleted\n");
     }
 
-
-
-
     private static void passwordReset(User user, Console console) {
         ForgotPassword passwordResetHandler = new ForgotPassword();
         System.out.print("Would you like to reset your password? (yes/no): ");
         String response = console.readLine();
-
         if ("yes".equalsIgnoreCase(response)) {
             String email = user.getEmail();
             passwordResetHandler.initiatePasswordReset(email);
             System.out.println("Please check your email for the reset code.");
-
             System.out.print("Enter the reset code you received: ");
             String resetCode = console.readLine();
-
             if (passwordResetHandler.verifyResetCode(resetCode)) {
                 SecurityUtils.resetPassword(user);
             } else {

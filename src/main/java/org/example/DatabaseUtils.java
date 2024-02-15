@@ -81,7 +81,7 @@ public class DatabaseUtils {
             return false;
         }
 
-        String sqlInsertUser = "INSERT INTO users (username, email, admin, hashedPassword, firstlogin) VALUES (?, ?, ?, ?, ?)";
+        String sqlInsertUser = "INSERT INTO users (username, email, admin, hashedPassword) VALUES (?, ?, ?, ?)";
         try (Connection conn = DatabaseConnector.connect(); PreparedStatement pstmt = conn.prepareStatement(sqlInsertUser)) {
             pstmt.setString(1, username);
             pstmt.setString(2, email);
@@ -541,6 +541,4 @@ public class DatabaseUtils {
             DatabaseConnector.encryptDatabaseFile();
         }
     }
-
-    //TODO:more
 }
