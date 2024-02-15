@@ -15,12 +15,12 @@ public class DatabaseConnector {
     private static final Logger log = LoggerFactory.getLogger(DatabaseConnector.class);
     private static final String ENCRYPTED_DB_FILE = "edb.sqlite";
     private static final String DECRYPTED_DB_FILE = "db.sqlite";
-    // Removed the hardcoded key
 
     static Console console  = System.console();
     public static Connection connect() {
         Connection conn = null;
         try {
+            decryptDatabase();
             String url = "jdbc:sqlite:" + DECRYPTED_DB_FILE;
             conn = DriverManager.getConnection(url);
             try (Statement stmt = conn.createStatement()) {
@@ -47,6 +47,8 @@ public class DatabaseConnector {
     }
 
     public static void encryptDatabaseFile() {
+        Console console = System.console();
+
         try {
             String key = getKey();
             FileEncryptor.encrypt(key, getDecryptedDbFile(), getEncryptedDbFile());
@@ -65,7 +67,7 @@ public class DatabaseConnector {
         } catch (SecurityException e) {
             console.printf("Error deleting the database file due to security restrictions: %s\n", e.getMessage());
         } catch (Exception e) {
-            console.printf("Error encrypting the database file: %s\n", e.getMessage());
+            log.error("Error encrypting the database file: %s\n" + e.getMessage());
         }
     }
 

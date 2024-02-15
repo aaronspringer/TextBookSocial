@@ -16,7 +16,8 @@ public class DatabaseInitializer {
                         "username TEXT NOT NULL UNIQUE," +
                         "email TEXT NOT NULL UNIQUE," +
                         "admin BOOLEAN NOT NULL," +
-                        "hashedPassword TEXT NOT NULL)";
+                        "hashedPassword TEXT NOT NULL," +
+                        "firstlogin INTEGER NOT NULL)";
 
 
         String sqlCreatePosts =
