@@ -16,6 +16,7 @@ public class DatabaseConnector {
     private static final String ENCRYPTED_DB_FILE = "edb.sqlite";
     private static final String DECRYPTED_DB_FILE = "db.sqlite";
 
+    static Console console  = System.console();
     public static Connection connect() {
         Connection conn = null;
         try {
@@ -47,17 +48,24 @@ public class DatabaseConnector {
 
     public static void encryptDatabaseFile() {
         Console console = System.console();
+
         try {
             String key = getKey();
             FileEncryptor.encrypt(key, getDecryptedDbFile(), getEncryptedDbFile());
             log.info("Encrypted " + getEncryptedDbFile());
 
             File decryptedFile = new File(getDecryptedDbFile());
-            if (decryptedFile.delete()) {
-                log.info("Deleted unencrypted file " + getDecryptedDbFile());
+            if (decryptedFile.exists()) {
+                if (decryptedFile.delete()) {
+                    log.info("Deleted unencrypted file " + getDecryptedDbFile());
+                } else {
+                    log.warn("Failed to delete decrypted file " + getDecryptedDbFile());
+                }
             } else {
-                log.warn("Failed to delete decrypted file " + getDecryptedDbFile());
+                log.warn("Decrypted file " + getDecryptedDbFile() + " does not exist");
             }
+        } catch (SecurityException e) {
+            console.printf("Error deleting the database file due to security restrictions: %s\n", e.getMessage());
         } catch (Exception e) {
             log.error("Error encrypting the database file: %s\n" + e.getMessage());
         }

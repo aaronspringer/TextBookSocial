@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 public class DatabaseUtils {
 
     private static final Logger log = LoggerFactory.getLogger(DatabaseUtils.class);
-    private static final String CONNECTION_STRING = "jdbc:sqlite:db.sqlite";
 
     private static final String ALPHA_NUMERIC_STRING = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz";
 
@@ -23,12 +22,13 @@ public class DatabaseUtils {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             log.error(e.getMessage());
-        }finally{
+        } finally {
             DatabaseConnector.encryptDatabaseFile();
         }
         log.info("Users table not empty");
         return false;
     }
+
 
     public static boolean isPostsTableEmpty() {
         log.info("Checking for empty comments table");
@@ -157,7 +157,7 @@ public class DatabaseUtils {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             log.error(e.getMessage());
-        }finally{
+        }finally {
             DatabaseConnector.encryptDatabaseFile();
         }
         return false;
@@ -204,7 +204,7 @@ public class DatabaseUtils {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             log.error(e.getMessage());
-        }finally{
+        }finally {
             DatabaseConnector.encryptDatabaseFile();
         }
         log.info("Found " + count + " posts");

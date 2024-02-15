@@ -1,4 +1,3 @@
-
 # TextBook Social
 
 A command line text based social media application
